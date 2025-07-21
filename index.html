@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Grupos Aleatórios</title>
+    <title>Gerador de Grupos Aleatórios v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,6 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Animação de fade-in para os resultados */
         .fade-in {
             animation: fadeIn 0.5s ease-in-out;
         }
@@ -20,42 +19,75 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Estilos para o switch toggle */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4f46e5;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4f46e5;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-6 md:p-8">
         
-        <!-- Cabeçalho -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Gerador de Grupos</h1>
-            <p class="text-gray-500 mt-2">Insira os nomes dos alunos e o número de grupos desejado.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Gerador de Grupos Avançado</h1>
+            <p class="text-gray-500 mt-2">Crie grupos por número ou por tamanho, guarde a sua lista e mais.</p>
         </div>
 
-        <!-- Formulário de Entrada -->
         <div class="space-y-6">
             <div>
                 <label for="studentNames" class="block text-sm font-medium text-gray-700 mb-2">Nomes dos Alunos (um por linha)</label>
                 <textarea id="studentNames" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Ana Silva&#10;João Costa&#10;Mariana Santos&#10;..."></textarea>
+                <div class="flex justify-end mt-2">
+                    <button id="saveListButton" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Guardar Lista</button>
+                </div>
+            </div>
+
+            <!-- Seletor de Modo -->
+            <div class="flex items-center justify-center space-x-4">
+                <span id="labelByNumber" class="font-semibold text-gray-900">Número de Grupos</span>
+                <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="modeToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                    <label for="modeToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+                <span id="labelBySize" class="font-medium text-gray-500">Tamanho por Grupo</span>
             </div>
             
-            <div>
-                <label for="groupCount" class="block text-sm font-medium text-gray-700 mb-2">Número de Grupos</label>
+            <!-- Inputs Condicionais -->
+            <div id="inputByNumber">
+                <label for="groupCount" class="block text-sm font-medium text-gray-700 mb-2">Quantos grupos quer formar?</label>
                 <input type="number" id="groupCount" min="1" class="w-full md:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Ex: 3">
             </div>
+            
+            <div id="inputBySize" class="hidden">
+                <label for="groupSize" class="block text-sm font-medium text-gray-700 mb-2">Quantos alunos por grupo?</label>
+                <input type="number" id="groupSize" min="1" class="w-full md:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Ex: 4">
+            </div>
 
-            <!-- Botão de Ação -->
-            <button id="generateButton" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
-                Gerar Grupos
-            </button>
+            <!-- Botões de Ação -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="generateButton" class="w-full sm:w-2/3 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                    Gerar Grupos
+                </button>
+                <button id="clearAllButton" class="w-full sm:w-1/3 bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition">
+                    Limpar Tudo
+                </button>
+            </div>
         </div>
 
-        <!-- Mensagem de Erro -->
+        <div id="feedback-message" class="mt-4 text-center text-green-600 font-medium hidden"></div>
         <div id="error-message" class="mt-4 text-center text-red-600 font-medium hidden"></div>
 
         <!-- Resultados -->
         <div id="results" class="mt-10 hidden">
-            <h2 class="text-2xl font-bold text-center mb-6 text-gray-900">Grupos Gerados</h2>
+            <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-2xl font-bold text-gray-900">Grupos Gerados</h2>
+                 <button id="copyResultsButton" class="bg-indigo-100 text-indigo-700 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-200 transition">Copiar Resultados</button>
+            </div>
             <div id="groups-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Os grupos serão inseridos aqui via JavaScript -->
             </div>
@@ -64,116 +96,187 @@
     </div>
 
     <script>
-        // Seleciona os elementos do DOM
-        const generateButton = document.getElementById('generateButton');
-        const studentNamesTextarea = document.getElementById('studentNames');
-        const groupCountInput = document.getElementById('groupCount');
-        const resultsDiv = document.getElementById('results');
-        const groupsContainer = document.getElementById('groups-container');
-        const errorMessageDiv = document.getElementById('error-message');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos do DOM
+            const studentNamesTextarea = document.getElementById('studentNames');
+            const saveListButton = document.getElementById('saveListButton');
+            const modeToggle = document.getElementById('modeToggle');
+            const inputByNumber = document.getElementById('inputByNumber');
+            const inputBySize = document.getElementById('inputBySize');
+            const labelByNumber = document.getElementById('labelByNumber');
+            const labelBySize = document.getElementById('labelBySize');
+            const groupCountInput = document.getElementById('groupCount');
+            const groupSizeInput = document.getElementById('groupSize');
+            const generateButton = document.getElementById('generateButton');
+            const clearAllButton = document.getElementById('clearAllButton');
+            const resultsDiv = document.getElementById('results');
+            const groupsContainer = document.getElementById('groups-container');
+            const copyResultsButton = document.getElementById('copyResultsButton');
+            const errorMessageDiv = document.getElementById('error-message');
+            const feedbackMessageDiv = document.getElementById('feedback-message');
 
-        // Adiciona o evento de clique ao botão
-        generateButton.addEventListener('click', () => {
-            // Limpa erros e resultados anteriores
-            errorMessageDiv.classList.add('hidden');
-            errorMessageDiv.textContent = '';
-            resultsDiv.classList.add('hidden');
-            groupsContainer.innerHTML = '';
-
-            // 1. Obter e limpar os nomes dos alunos
-            const names = studentNamesTextarea.value
-                .split('\n')
-                .map(name => name.trim())
-                .filter(name => name.length > 0);
-
-            // 2. Obter o número de grupos
-            const groupCount = parseInt(groupCountInput.value, 10);
-
-            // 3. Validação das entradas
-            if (names.length === 0) {
-                showError('Por favor, insira pelo menos um nome de aluno.');
-                return;
-            }
-            if (isNaN(groupCount) || groupCount <= 0) {
-                showError('Por favor, insira um número de grupos válido (maior que zero).');
-                return;
-            }
-            if (groupCount > names.length) {
-                showError('O número de grupos não pode ser maior que o número de alunos.');
-                return;
+            // Carregar lista de alunos guardada
+            const savedNames = localStorage.getItem('studentList');
+            if (savedNames) {
+                studentNamesTextarea.value = savedNames;
             }
 
-            // 4. Lógica de criação dos grupos
-            const shuffledNames = shuffleArray([...names]);
-            const groups = Array.from({ length: groupCount }, () => []);
+            // --- Lógica dos Eventos ---
 
-            shuffledNames.forEach((name, index) => {
-                groups[index % groupCount].push(name);
+            // Guardar lista
+            saveListButton.addEventListener('click', () => {
+                localStorage.setItem('studentList', studentNamesTextarea.value);
+                showFeedback('Lista de alunos guardada com sucesso!');
             });
 
-            // 5. Exibir os resultados
-            displayGroups(groups);
-        });
-        
-        /**
-         * Exibe uma mensagem de erro no ecrã.
-         * @param {string} message - A mensagem a ser exibida.
-         */
-        function showError(message) {
-            errorMessageDiv.textContent = message;
-            errorMessageDiv.classList.remove('hidden');
-        }
+            // Limpar tudo
+            clearAllButton.addEventListener('click', () => {
+                studentNamesTextarea.value = '';
+                groupCountInput.value = '';
+                groupSizeInput.value = '';
+                localStorage.removeItem('studentList');
+                hideMessages();
+                resultsDiv.classList.add('hidden');
+                groupsContainer.innerHTML = '';
+                showFeedback('Tudo limpo!');
+            });
 
-        /**
-         * Embaralha um array usando o algoritmo Fisher-Yates.
-         * @param {Array} array - O array a ser embaralhado.
-         * @returns {Array} O array embaralhado.
-         */
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]]; // Troca de elementos
-            }
-            return array;
-        }
+            // Mudar modo de geração
+            modeToggle.addEventListener('change', () => {
+                const isBySize = modeToggle.checked;
+                inputByNumber.classList.toggle('hidden', isBySize);
+                inputBySize.classList.toggle('hidden', !isBySize);
+                labelByNumber.classList.toggle('text-gray-900', !isBySize);
+                labelByNumber.classList.toggle('font-semibold', !isBySize);
+                labelByNumber.classList.toggle('text-gray-500', isBySize);
+                labelBySize.classList.toggle('text-gray-900', isBySize);
+                labelBySize.classList.toggle('font-semibold', isBySize);
+                labelBySize.classList.toggle('text-gray-500', !isBySize);
+            });
 
-        /**
-         * Renderiza os grupos no DOM.
-         * @param {Array<Array<string>>} groups - O array de grupos.
-         */
-        function displayGroups(groups) {
-            groups.forEach((group, index) => {
-                const groupCard = document.createElement('div');
-                groupCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm fade-in';
-                
-                const title = document.createElement('h3');
-                title.className = 'font-bold text-lg text-indigo-700 mb-3';
-                title.textContent = `Grupo ${index + 1}`;
-                groupCard.appendChild(title);
+            // Gerar Grupos
+            generateButton.addEventListener('click', () => {
+                hideMessages();
+                resultsDiv.classList.add('hidden');
+                groupsContainer.innerHTML = '';
 
-                const studentList = document.createElement('ul');
-                studentList.className = 'space-y-2';
-                
-                if (group.length === 0) {
-                    const listItem = document.createElement('li');
-                    listItem.className = 'text-gray-500 italic';
-                    listItem.textContent = 'Nenhum aluno neste grupo.';
-                    studentList.appendChild(listItem);
+                const names = studentNamesTextarea.value.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+                if (names.length === 0) {
+                    showError('Por favor, insira pelo menos um nome de aluno.');
+                    return;
+                }
+
+                const shuffledNames = shuffleArray([...names]);
+                let groups = [];
+                const isBySize = modeToggle.checked;
+
+                if (isBySize) {
+                    // Lógica por tamanho do grupo
+                    const groupSize = parseInt(groupSizeInput.value, 10);
+                    if (isNaN(groupSize) || groupSize <= 0) {
+                        showError('Por favor, insira um tamanho de grupo válido.');
+                        return;
+                    }
+                    const numGroups = Math.ceil(names.length / groupSize);
+                    groups = Array.from({ length: numGroups }, () => []);
+                    shuffledNames.forEach((name, index) => {
+                        groups[Math.floor(index / groupSize)].push(name);
+                    });
                 } else {
+                    // Lógica por número de grupos
+                    const groupCount = parseInt(groupCountInput.value, 10);
+                    if (isNaN(groupCount) || groupCount <= 0) {
+                        showError('Por favor, insira um número de grupos válido.');
+                        return;
+                    }
+                    if (groupCount > names.length) {
+                        showError('O número de grupos não pode ser maior que o número de alunos.');
+                        return;
+                    }
+                    groups = Array.from({ length: groupCount }, () => []);
+                    shuffledNames.forEach((name, index) => {
+                        groups[index % groupCount].push(name);
+                    });
+                }
+
+                displayGroups(groups);
+            });
+
+            // Copiar Resultados
+            copyResultsButton.addEventListener('click', () => {
+                const groupsText = Array.from(groupsContainer.children).map((card, index) => {
+                    const title = `Grupo ${index + 1}`;
+                    const members = Array.from(card.querySelectorAll('li')).map(li => li.textContent).join(', ');
+                    return `${title}: ${members}`;
+                }).join('\n');
+                
+                // Usar um textarea temporário para copiar para a área de transferência
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = groupsText;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                try {
+                    document.execCommand('copy');
+                    showFeedback('Resultados copiados!');
+                } catch (err) {
+                    showError('Não foi possível copiar os resultados.');
+                }
+                document.body.removeChild(tempTextarea);
+            });
+
+            // --- Funções Auxiliares ---
+
+            function showError(message) {
+                errorMessageDiv.textContent = message;
+                errorMessageDiv.classList.remove('hidden');
+            }
+            
+            function showFeedback(message) {
+                feedbackMessageDiv.textContent = message;
+                feedbackMessageDiv.classList.remove('hidden');
+                setTimeout(() => feedbackMessageDiv.classList.add('hidden'), 2000);
+            }
+
+            function hideMessages() {
+                errorMessageDiv.classList.add('hidden');
+                feedbackMessageDiv.classList.add('hidden');
+            }
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            function displayGroups(groups) {
+                groups.forEach((group, index) => {
+                    const groupCard = document.createElement('div');
+                    groupCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm fade-in';
+                    
+                    const title = document.createElement('h3');
+                    title.className = 'font-bold text-lg text-indigo-700 mb-3';
+                    title.textContent = `Grupo ${index + 1}`;
+                    groupCard.appendChild(title);
+
+                    const studentList = document.createElement('ul');
+                    studentList.className = 'space-y-2';
+                    
                     group.forEach(student => {
                         const listItem = document.createElement('li');
                         listItem.className = 'text-gray-800';
                         listItem.textContent = student;
                         studentList.appendChild(listItem);
                     });
-                }
 
-                groupCard.appendChild(studentList);
-                groupsContainer.appendChild(groupCard);
-            });
+                    groupCard.appendChild(studentList);
+                    groupsContainer.appendChild(groupCard);
+                });
 
-            resultsDiv.classList.remove('hidden');
-        }
+                resultsDiv.classList.remove('hidden');
+            }
+        });
     </script>
 </body>
 </html>
