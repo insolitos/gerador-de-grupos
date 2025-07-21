@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Grupos Aleatórios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Animação de fade-in para os resultados */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-6 md:p-8">
+        
+        <!-- Cabeçalho -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Gerador de Grupos</h1>
+            <p class="text-gray-500 mt-2">Insira os nomes dos alunos e o número de grupos desejado.</p>
+        </div>
+
+        <!-- Formulário de Entrada -->
+        <div class="space-y-6">
+            <div>
+                <label for="studentNames" class="block text-sm font-medium text-gray-700 mb-2">Nomes dos Alunos (um por linha)</label>
+                <textarea id="studentNames" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Ana Silva&#10;João Costa&#10;Mariana Santos&#10;..."></textarea>
+            </div>
+            
+            <div>
+                <label for="groupCount" class="block text-sm font-medium text-gray-700 mb-2">Número de Grupos</label>
+                <input type="number" id="groupCount" min="1" class="w-full md:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Ex: 3">
+            </div>
+
+            <!-- Botão de Ação -->
+            <button id="generateButton" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                Gerar Grupos
+            </button>
+        </div>
+
+        <!-- Mensagem de Erro -->
+        <div id="error-message" class="mt-4 text-center text-red-600 font-medium hidden"></div>
+
+        <!-- Resultados -->
+        <div id="results" class="mt-10 hidden">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-900">Grupos Gerados</h2>
+            <div id="groups-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Os grupos serão inseridos aqui via JavaScript -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Seleciona os elementos do DOM
+        const generateButton = document.getElementById('generateButton');
+        const studentNamesTextarea = document.getElementById('studentNames');
+        const groupCountInput = document.getElementById('groupCount');
+        const resultsDiv = document.getElementById('results');
+        const groupsContainer = document.getElementById('groups-container');
+        const errorMessageDiv = document.getElementById('error-message');
+
+        // Adiciona o evento de clique ao botão
+        generateButton.addEventListener('click', () => {
+            // Limpa erros e resultados anteriores
+            errorMessageDiv.classList.add('hidden');
+            errorMessageDiv.textContent = '';
+            resultsDiv.classList.add('hidden');
+            groupsContainer.innerHTML = '';
+
+            // 1. Obter e limpar os nomes dos alunos
+            const names = studentNamesTextarea.value
+                .split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+
+            // 2. Obter o número de grupos
+            const groupCount = parseInt(groupCountInput.value, 10);
+
+            // 3. Validação das entradas
+            if (names.length === 0) {
+                showError('Por favor, insira pelo menos um nome de aluno.');
+                return;
+            }
+            if (isNaN(groupCount) || groupCount <= 0) {
+                showError('Por favor, insira um número de grupos válido (maior que zero).');
+                return;
+            }
+            if (groupCount > names.length) {
+                showError('O número de grupos não pode ser maior que o número de alunos.');
+                return;
+            }
+
+            // 4. Lógica de criação dos grupos
+            const shuffledNames = shuffleArray([...names]);
+            const groups = Array.from({ length: groupCount }, () => []);
+
+            shuffledNames.forEach((name, index) => {
+                groups[index % groupCount].push(name);
+            });
+
+            // 5. Exibir os resultados
+            displayGroups(groups);
+        });
+        
+        /**
+         * Exibe uma mensagem de erro no ecrã.
+         * @param {string} message - A mensagem a ser exibida.
+         */
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
+
+        /**
+         * Embaralha um array usando o algoritmo Fisher-Yates.
+         * @param {Array} array - O array a ser embaralhado.
+         * @returns {Array} O array embaralhado.
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Troca de elementos
+            }
+            return array;
+        }
+
+        /**
+         * Renderiza os grupos no DOM.
+         * @param {Array<Array<string>>} groups - O array de grupos.
+         */
+        function displayGroups(groups) {
+            groups.forEach((group, index) => {
+                const groupCard = document.createElement('div');
+                groupCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm fade-in';
+                
+                const title = document.createElement('h3');
+                title.className = 'font-bold text-lg text-indigo-700 mb-3';
+                title.textContent = `Grupo ${index + 1}`;
+                groupCard.appendChild(title);
+
+                const studentList = document.createElement('ul');
+                studentList.className = 'space-y-2';
+                
+                if (group.length === 0) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'text-gray-500 italic';
+                    listItem.textContent = 'Nenhum aluno neste grupo.';
+                    studentList.appendChild(listItem);
+                } else {
+                    group.forEach(student => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'text-gray-800';
+                        listItem.textContent = student;
+                        studentList.appendChild(listItem);
+                    });
+                }
+
+                groupCard.appendChild(studentList);
+                groupsContainer.appendChild(groupCard);
+            });
+
+            resultsDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
